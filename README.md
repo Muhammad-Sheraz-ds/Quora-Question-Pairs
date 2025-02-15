@@ -1,5 +1,11 @@
 # Quora Question Pairs
 
+
+[![Demo](demo.png)](https://huggingface.co/spaces/MuhammadSheraza002/Quora_Questions_Pairs)
+
+Click on the image above to open the **live demo** on Hugging Face.
+
+
 ## Business Problem
 
 Quora is a platform for gaining and sharing knowledge. It connects people who contribute unique insights and quality answers, empowering users to learn from each other and better understand the world. With over 100 million visitors every month, many questions on Quora are similarly worded, causing seekers to spend more time finding the best answer and making writers feel they need to answer multiple versions of the same question. Quora values canonical questions because they provide a better experience for both seekers and writers, offering more value to both groups in the long term.
@@ -28,13 +34,17 @@ This project involves developing a machine learning model to detect duplicate qu
 1. Clone the repository:
    ```bash
    git clone https://github.com/Muhammad-Sheraz-ds/Quora-Question-Pairs.git
+   cd Duplicate-Question-Pairs/streamlit-app
    ```
 
 2. Install the required dependencies:
 
     ```
     pip install -r requirements.txt
+    streamlit run app.py
     ```
+
+
 
 
 ## Contributing
