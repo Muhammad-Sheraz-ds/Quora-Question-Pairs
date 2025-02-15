@@ -1,23 +1,23 @@
 import re
 from bs4 import BeautifulSoup
 import distance
-from fuzzywuzzy import fuzz
 import pickle
 import numpy as np
-
+import os
 cv = pickle.load(open('cv.pkl','rb'))
 
-
-def test_common_words(q1,q2):
-    w1 = set(map(lambda word: word.lower().strip(), q1.split(" ")))
-    w2 = set(map(lambda word: word.lower().strip(), q2.split(" ")))
+#function that  will give common words present in both questions
+def common_words(row):
+    w1 = set(map(lambda word: word.lower().strip(), row['question1'].split(" ")))
+    w2 = set(map(lambda word: word.lower().strip(), row['question2'].split(" ")))
     return len(w1 & w2)
 
-def test_total_words(q1,q2):
-    w1 = set(map(lambda word: word.lower().strip(), q1.split(" ")))
-    w2 = set(map(lambda word: word.lower().strip(), q2.split(" ")))
-    return (len(w1) + len(w2))
 
+#function that will find sum of length of both questions
+def total_words(row):
+    w1 = set(map(lambda word: word.lower().strip(), row['question1'].split(" ")))
+    w2 = set(map(lambda word: word.lower().strip(), row['question2'].split(" ")))
+    return (len(w1) + len(w2))
 
 def test_fetch_token_features(q1, q2):
     SAFE_DIV = 0.0001
@@ -67,7 +67,7 @@ def test_fetch_token_features(q1, q2):
 
 
 def test_fetch_length_features(q1, q2):
-    length_features = [0.0] * 3
+    length_features = [0.0] * 2
 
     # Converting the Sentence into Tokens:
     q1_tokens = q1.split()
@@ -79,31 +79,10 @@ def test_fetch_length_features(q1, q2):
     # Absolute length features
     length_features[0] = abs(len(q1_tokens) - len(q2_tokens))
 
-    # Average Token Length of both Questions
-    length_features[1] = (len(q1_tokens) + len(q2_tokens)) / 2
-
     strs = list(distance.lcsubstrings(q1, q2))
-    length_features[2] = len(strs[0]) / (min(len(q1), len(q2)) + 1)
+    length_features[1] = len(strs[0]) / (min(len(q1), len(q2)) + 1)
 
     return length_features
-
-
-def test_fetch_fuzzy_features(q1, q2):
-    fuzzy_features = [0.0] * 4
-
-    # fuzz_ratio
-    fuzzy_features[0] = fuzz.QRatio(q1, q2)
-
-    # fuzz_partial_ratio
-    fuzzy_features[1] = fuzz.partial_ratio(q1, q2)
-
-    # token_sort_ratio
-    fuzzy_features[2] = fuzz.token_sort_ratio(q1, q2)
-
-    # token_set_ratio
-    fuzzy_features[3] = fuzz.token_set_ratio(q1, q2)
-
-    return fuzzy_features
 
 
 def preprocess(q):
@@ -274,41 +253,29 @@ def preprocess(q):
 
     return q
 
-
-def query_point_creator(q1, q2):
+def query_point_creator(q1,q2):
+    
     input_query = []
-
+    
     # preprocess
     q1 = preprocess(q1)
     q2 = preprocess(q2)
 
-    # fetch basic features
-    input_query.append(len(q1))
-    input_query.append(len(q2))
-
-    input_query.append(len(q1.split(" ")))
-    input_query.append(len(q2.split(" ")))
-
-    input_query.append(test_common_words(q1, q2))
-    input_query.append(test_total_words(q1, q2))
-    input_query.append(round(test_common_words(q1, q2) / test_total_words(q1, q2), 2))
 
     # fetch token features
-    token_features = test_fetch_token_features(q1, q2)
+    token_features = test_fetch_token_features(q1,q2)
     input_query.extend(token_features)
-
+    
     # fetch length based features
-    length_features = test_fetch_length_features(q1, q2)
+    length_features = test_fetch_length_features(q1,q2)
     input_query.extend(length_features)
-
-    # fetch fuzzy features
-    fuzzy_features = test_fetch_fuzzy_features(q1, q2)
-    input_query.extend(fuzzy_features)
-
+    
     # bow feature for q1
     q1_bow = cv.transform([q1]).toarray()
-
+    
     # bow feature for q2
     q2_bow = cv.transform([q2]).toarray()
-
-    return np.hstack((np.array(input_query).reshape(1, 22), q1_bow, q2_bow))
+    
+    
+    
+    return np.hstack((np.array(input_query).reshape(1,10),q1_bow,q2_bow))
